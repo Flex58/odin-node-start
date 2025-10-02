@@ -1,37 +1,27 @@
-import http from "node:http";
-import fs from "node:fs";
-import url from "node:url";
+const express = require("express");
+const app = express();
 
-const host = "localhost";
 const port = 8080;
 
-const server = http.createServer((req, res) => {
-  const parseUrl = url.parse(req.url, true);
+app.get("/{*splat}", (req, res) => {
+  const path = req.path;
   const file =
-    parseUrl.path === "/" ? "./index.html" : "." + parseUrl.path + ".html";
-
-  fs.readFile(file, (err, data) => {
+    path === "/"
+      ? __dirname + "/index.html"
+      : __dirname + path + ".html";
+  res.set("Content-Type", "text/html");
+  res.sendFile(file, (err) => {
     if (err) {
-      fs.readFile("./404.html", (err, errData) => {
-        if (err) {
-          res.writeHead(404, { "Content-Type": "text/html" });
-          res.write("404 Page Not Found");
-          return res.end();
+      res.status(404);
+      res.sendFile(__dirname + "/404.html", (newErr) => {
+        if (newErr) {
+          throw newErr;
         }
-        res.statusCode = 404;
-        res.setHeader("Content-Type", "text/html");
-        res.write(errData);
-        return res.end();
       });
       return;
     }
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html");
-    res.write(data);
-    return res.end();
+    res.status(200);
   });
 });
 
-server.listen(port, host, () =>
-  console.log(`Server running at ${host}${port}`)
-);
+app.listen(port, () => console.log(`Server listion to Port ${port}`));
